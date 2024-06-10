@@ -60,8 +60,7 @@ def upload_content(request):
     
 def get_notes(request,user_id):
     if request.method == 'GET':
-        notes = Note.objects.all()
-        #notes = Note.objects.filter(user_id=user_id)
+        notes = Note.objects.filter(user_id=user_id)
         notes = NoteSerializer(notes, many=True).data
         return JsonResponse(notes,safe=False, status=200)
     else:
@@ -72,6 +71,8 @@ def get_note(request,note_id):
         note = get_object_or_404(Note, note_id=note_id)
         note = NoteSerializer(note).data
         return JsonResponse(note,safe=False, status=200)
+    else:
+        return JsonResponse({'message': 'Invalid request'}, status=400)
 
 def get_note_content(request,note_id):
     if request.method == 'GET':
@@ -81,6 +82,8 @@ def get_note_content(request,note_id):
         print(contents)
         note = NoteSerializer(note).data
         return JsonResponse({"contents":contents,"note":note}, status=200)
+    else:
+        return JsonResponse({'message': 'Invalid request'}, status=400)
     
 
 def download_file(request, content_id):

@@ -1,8 +1,9 @@
 from django.db import models
+from user.models import User
 
 class Note(models.Model):
     note_id = models.IntegerField(primary_key=True)
-    user_id = models.IntegerField()
+    user_id = models.ForeignKey(User,related_name='notes', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     create_time = models.CharField(max_length=200)
     version = models.IntegerField(default=0)
