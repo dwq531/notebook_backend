@@ -7,6 +7,7 @@ class Note(models.Model):
     title = models.CharField(max_length=200)
     create_time = models.CharField(max_length=200)
     version = models.IntegerField(default=0)
+    folder = models.ForeignKey('Folder', related_name='notes', on_delete=models.CASCADE,null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -33,3 +34,12 @@ class Content(models.Model):
 
     def __str__(self):
         return f"{self.note.title} - {self.content_type}"
+    
+class Folder(models.Model):
+    folder_id = models.IntegerField(primary_key=True)
+    user_id = models.ForeignKey(User,related_name='folders', on_delete=models.CASCADE)
+    folder_name = models.CharField(max_length=200)
+    version = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.folder_name

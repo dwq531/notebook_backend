@@ -1,8 +1,8 @@
-from .models import Note, Content
-from .forms import NoteForm, ContentForm
+from .models import Note, Content,Folder
+from .forms import NoteForm, ContentForm,FolderForm
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from .serializers import NoteSerializer,ContentSerializer
+from .serializers import NoteSerializer,ContentSerializer,FolderSerializer
 import json
 from django.http import Http404
 from django.http import FileResponse
@@ -124,5 +124,55 @@ def delete_note(request,note_id):
         if note is not None:
             note.delete()
         return JsonResponse({'message': 'Note deleted'}, status=200)
+    else:
+        return JsonResponse({'message': 'Invalid request'}, status=400)
+    
+def get_folder_name(request,user_id):
+    if request.method == 'GET':
+        folders = Folder.objects.filter(user_id=user_id)
+        folders = FolderSerializer(folders, many=True).data
+        return JsonResponse(folders,safe=False, status=200)
+    else:
+        return JsonResponse({'message': 'Invalid request'}, status=400)
+    
+def get_folder_notes(request,folder_name):
+    if request.method == 'GET':
+        folder = get_object_or_404(Folder, folder_name=folder_name)
+        notes = folder.notes.all()
+        notes = NoteSerializer(notes, many=True).data
+        folder = FolderSerializer(folder).data
+        return JsonResponse(notes,safe=False, status=200)
+    else:
+        return JsonResponse({'message': 'Invalid request'}, status=400)
+    
+def update_folder(request):
+    if request.method == 'POST':
+        folder_form = FolderForm(request.POST)
+        if folder_form.is_valid():
+            folder_id = folder_form.cleaned_data['folder_id']
+            folder = Folder.objects.filter(folder_id=folder_id).first()
+            if folder:
+                for field, value in folder_form.cleaned_data.items():
+                    setattr(folder, field, value)
+                folder.save()
+                message = 'Folder updated'
+            else: 
+                folder = Folder.objects.create(**folder_form.cleaned_data)
+                message = 'Folder created'
+            return JsonResponse({'message': message}, status=200)
+        else:
+            for folder in Folder.objects.all():
+                print(folder.folder_id)
+            print(folder_form.errors)
+            return JsonResponse({'message': 'Invalid form'}, status=400)
+    else:
+        return JsonResponse({'message': 'Invalid request'}, status=400)
+    
+def add_note_to_folder(request,note_id,folder_id):
+    if request.method == 'POST':
+        note = get_object_or_404(Note, note_id=note_id)
+        note.folder_id = folder_id
+        note.save()
+        return JsonResponse({'message': 'Note added to folder'}, status=200)
     else:
         return JsonResponse({'message': 'Invalid request'}, status=400)
